@@ -1,0 +1,21 @@
+{
+  "name": "Mate Lab AI",
+  "short_name": "matelab-ai",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#F7F6F0",
+  "theme_color": "#1E8A55",
+  "lang": "en-AU",
+  "icons": [
+    {
+      "src": "./icono-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./icono-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
