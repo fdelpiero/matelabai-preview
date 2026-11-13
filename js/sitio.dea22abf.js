@@ -17,6 +17,9 @@
   window.SITIO_LISTO = true;
   raiz.classList.add('js');
   var quieto = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // La página en español (lang="es-…") usa los textos en español de las demos.
+  var ES = /^es/i.test(raiz.getAttribute('lang') || '');
+  var tr = function (en, es) { return ES ? es : en; };
   var $$ = function (sel, el) { return Array.prototype.slice.call((el || document).querySelectorAll(sel)); };
 
   function evento(nombre, datos) {
@@ -29,7 +32,7 @@
   function cierraMenu() {
     if (!boton || !menu) return;
     boton.setAttribute('aria-expanded', 'false');
-    boton.setAttribute('aria-label', 'Open menu');
+    boton.setAttribute('aria-label', tr('Open menu', 'Abrir menú'));
     menu.classList.remove('abierto');
     document.body.classList.remove('menu-abierto');
   }
@@ -37,7 +40,7 @@
     boton.addEventListener('click', function () {
       var abrir = boton.getAttribute('aria-expanded') !== 'true';
       boton.setAttribute('aria-expanded', String(abrir));
-      boton.setAttribute('aria-label', abrir ? 'Close menu' : 'Open menu');
+      boton.setAttribute('aria-label', abrir ? tr('Close menu', 'Cerrar menú') : tr('Open menu', 'Abrir menú'));
       menu.classList.toggle('abierto', abrir);
       document.body.classList.toggle('menu-abierto', abrir);
       if (abrir) { var primero = menu.querySelector('a'); if (primero) primero.focus(); }
@@ -328,7 +331,7 @@
         p.classList.toggle('recorrido', en && b <= i);
       });
       atras.disabled = i === 0;
-      if (sigTexto) sigTexto.textContent = i === lista.length - 1 ? 'Start again' : 'Next';
+      if (sigTexto) sigTexto.textContent = i === lista.length - 1 ? tr('Start again', 'Empezar de nuevo') : tr('Next', 'Siguiente');
     };
     var toca = function () {
       tocado = true;
@@ -380,14 +383,14 @@
       };
       piezas.forEach(function (p) { marca(p, p.getAttribute('data-pieza')); });
       radios.forEach(function (r) { marca(r, r.getAttribute('data-radio')); });
-      if (estado) estado.textContent = items[paso].getAttribute('data-estado') || 'Working';
-      if (cuenta) cuenta.textContent = 'Step ' + (paso + 1) + ' of ' + items.length;
+      if (estado) estado.textContent = items[paso].getAttribute('data-estado') || tr('Working', 'Trabajando');
+      if (cuenta) cuenta.textContent = tr('Step ', 'Paso ') + (paso + 1) + tr(' of ', ' de ') + items.length;
       if (progreso) {
         progreso.innerHTML = '';
         items.forEach(function (li, n) { var p = document.createElement('li'); if (n <= paso) p.className = 'hecho'; progreso.appendChild(p); });
       }
       reinicio.disabled = paso === 0;
-      if (sigTexto) sigTexto.textContent = paso >= items.length - 1 ? 'Run it again' : 'Next step';
+      if (sigTexto) sigTexto.textContent = paso >= items.length - 1 ? tr('Run it again', 'Repetir') : tr('Next step', 'Siguiente paso');
     };
     var avanza = function () {
       var total = $$('li', trazas[actual]).length;
@@ -505,9 +508,9 @@
         li.className = 'ruta-item ' + (k === 0 ? 'primero' : k < 3 ? 'despues' : 'luego');
         li.style.setProperty('--parte', (d.horas / max).toFixed(3));
         var tag = document.createElement('span'), nombre = document.createElement('b'), nota = document.createElement('small'), barra = document.createElement('span');
-        tag.className = 'ruta-tag'; tag.textContent = k === 0 ? 'Start here' : k < 3 ? 'Next' : 'Later';
+        tag.className = 'ruta-tag'; tag.textContent = k === 0 ? tr('Start here', 'Empieza aquí') : k < 3 ? tr('Next', 'Siguiente') : tr('Later', 'Más adelante');
         nombre.textContent = d.nombre;
-        nota.textContent = 'About ' + uno(d.horas) + ' hours a month · ' + d.arreglo;
+        nota.textContent = tr('About ', 'Unas ') + uno(d.horas) + tr(' hours a month · ', ' horas al mes · ') + d.arreglo;
         barra.className = 'ruta-barra'; barra.appendChild(document.createElement('i'));
         li.appendChild(tag); li.appendChild(nombre); li.appendChild(nota); li.appendChild(barra);
         lista.appendChild(li);
@@ -522,8 +525,14 @@
      y cada etapa corre sus automatizaciones, que se ven pasar en el panel de la derecha ---------- */
   $$('[data-crm]').forEach(function (crm) {
     var etapas = ['nuevo', 'visita', 'cotizado', 'ganado'];
-    var nombres = { nuevo: 'New enquiry', visita: 'Visit booked', cotizado: 'Quote sent', ganado: 'Won' };
-    var reglas = {
+    var nombres = ES
+      ? { nuevo: 'Nueva consulta', visita: 'Visita agendada', cotizado: 'Cotización enviada', ganado: 'Ganado' }
+      : { nuevo: 'New enquiry', visita: 'Visit booked', cotizado: 'Quote sent', ganado: 'Won' };
+    var reglas = ES ? {
+      visita: [['Confirmación enviada por mensaje a', 2], ['Visita agregada al calendario para', 3]],
+      cotizado: [['Cotización enviada por correo a', 6], ['Seguimiento agendado en 3 días para', 2]],
+      ganado: [['Trabajo creado en la hoja de trabajos para', 4], ['Factura de anticipo enviada a', 6], ['Equipo avisado en #jobs sobre', 1]]
+    } : {
       visita: [['Confirmation text sent to', 2], ['Visit added to the calendar for', 3]],
       cotizado: [['Quote emailed to', 6], ['Follow-up booked in 3 days for', 2]],
       ganado: [['Job created in the job sheet for', 4], ['Deposit invoice sent to', 6], ['Team told in #jobs about', 1]]
@@ -552,7 +561,7 @@
       texto('[data-crm-abiertos]', abiertos);
     };
     var contadores = function () {
-      texto('[data-crm-acciones]', acciones + (acciones === 1 ? ' action' : ' actions'));
+      texto('[data-crm-acciones]', acciones + (acciones === 1 ? tr(' action', ' acción') : tr(' actions', ' acciones')));
       texto('[data-crm-minutos]', minutos + ' min');
     };
     var anota = function (t, hecho) {
@@ -579,7 +588,7 @@
     var corre = function (etapa, cliente) {
       var lista = reglas[etapa];
       marcaRegla(etapa);
-      if (!lista) { anota(cliente + ' is in ' + nombres[etapa] + '. Nothing runs at this stage.', false); return; }
+      if (!lista) { anota(cliente + tr(' is in ', ' está en ') + nombres[etapa] + tr('. Nothing runs at this stage.', '. En esta etapa no corre nada.'), false); return; }
       lista.forEach(function (accion, k) {
         setTimeout(function () {
           anota(accion[0] + ' ' + cliente, true);
@@ -594,7 +603,7 @@
       lista.insertBefore(tarjeta, lista.firstChild);
       tarjeta.setAttribute('data-dias', '0');
       var d = tarjeta.querySelector('[data-dias-texto]');
-      if (d) d.textContent = 'now';
+      if (d) d.textContent = tr('now', 'ahora');
       tarjeta.classList.remove('seguido', 'llega');
       void tarjeta.offsetWidth;
       tarjeta.classList.add('llega');
@@ -602,7 +611,7 @@
       totales(); cuentaQuietos();
       var cliente = tarjeta.getAttribute('data-cliente');
       if (etapas.indexOf(etapa) > etapas.indexOf(desde)) corre(etapa, cliente);
-      else { marcaRegla(''); anota(cliente + ' moved back to ' + nombres[etapa] + '. Nothing runs.', false); }
+      else { marcaRegla(''); anota(cliente + tr(' moved back to ', ' volvió a ') + nombres[etapa] + tr('. Nothing runs.', '. No corre nada.'), false); }
     };
     var cierra = function () {
       if (!menu) return;
@@ -613,15 +622,15 @@
     var abre = function (boton) {
       var tarjeta = boton.closest('.crm-tarjeta'), actual = tarjeta.closest('[data-etapa]').getAttribute('data-etapa');
       var el = document.createElement('div'), titulo = document.createElement('p');
-      el.className = 'crm-menu'; el.setAttribute('role', 'menu'); el.setAttribute('aria-label', 'Move to');
-      titulo.className = 'crm-menu-titulo'; titulo.textContent = 'Move to';
+      el.className = 'crm-menu'; el.setAttribute('role', 'menu'); el.setAttribute('aria-label', tr('Move to', 'Mover a'));
+      titulo.className = 'crm-menu-titulo'; titulo.textContent = tr('Move to', 'Mover a');
       el.appendChild(titulo);
       etapas.forEach(function (et) {
         if (et === actual) return;
         var o = document.createElement('button');
         o.type = 'button'; o.className = 'crm-opcion'; o.setAttribute('role', 'menuitem');
         o.textContent = nombres[et];
-        o.setAttribute('data-extra', etapas.indexOf(et) < etapas.indexOf(actual) ? 'Move back' : (reglas[et] ? reglas[et].length + ' automations' : ''));
+        o.setAttribute('data-extra', etapas.indexOf(et) < etapas.indexOf(actual) ? tr('Move back', 'Regresar') : (reglas[et] ? reglas[et].length + tr(' automations', ' automatizaciones') : ''));
         o.addEventListener('click', function () { cierra(); mueve(tarjeta, et); boton.focus(); });
         el.appendChild(o);
       });
@@ -698,7 +707,7 @@
       lista.forEach(function (t, k) {
         t.classList.add('seguido');
         setTimeout(function () {
-          anota('Follow-up drafted for ' + t.getAttribute('data-cliente') + ' after ' + t.getAttribute('data-dias') + ' quiet days', true);
+          anota(ES ? 'Seguimiento redactado para ' + t.getAttribute('data-cliente') + ' tras ' + t.getAttribute('data-dias') + ' días sin respuesta' : 'Follow-up drafted for ' + t.getAttribute('data-cliente') + ' after ' + t.getAttribute('data-dias') + ' quiet days', true);
           acciones++; minutos += 4; contadores();
         }, quieto ? 0 : 520 * (k + 1));
       });
@@ -727,7 +736,7 @@
       while (actividad.children.length > 5) actividad.removeChild(actividad.lastChild);
     };
     var pendientes = 2, cotizaciones = 9, valorCot = 24300, hechos = 2, deDan = 2;
-    var frases = ['Nothing needs you.', 'One thing needs you.', 'Two things need you.'];
+    var frases = ES ? ['Nada te necesita.', 'Una cosa te necesita.', 'Dos cosas te necesitan.'] : ['Nothing needs you.', 'One thing needs you.', 'Two things need you.'];
     $$('[data-apps-aprobar]', app).forEach(function (b) {
       b.addEventListener('click', function () {
         var tipo = b.getAttribute('data-apps-aprobar'), li = b.closest('li');
@@ -737,11 +746,11 @@
           pon('[data-apps-cotizaciones]', cotizaciones);
           pon('[data-apps-cotizaciones-valor]', '$' + valorCot.toLocaleString('en-AU'));
           pon('[data-apps-nav-cotizaciones]', cotizaciones);
-          anota('Sent the bathroom quote to M. Patel and booked a follow-up.');
+          anota(tr('Sent the bathroom quote to M. Patel and booked a follow-up.', 'Envió a M. Patel la cotización del baño y agendó un seguimiento.'));
         } else {
           pon('[data-apps-facturas]', '0');
           pon('[data-apps-nav-facturas]', '0');
-          anota('Filed INV-2041 with Sam’s approval and drafted the bill.');
+          anota(tr('Filed INV-2041 with Sam’s approval and drafted the bill.', 'Archivó INV-2041 con la aprobación de Sam y creó la cuenta por pagar.'));
         }
         pendientes = Math.max(0, pendientes - 1);
         pon('[data-apps-needs]', pendientes);
@@ -755,7 +764,10 @@
         if (quieto) quita(); else setTimeout(quita, 380);
       });
     });
-    var trabajos = [
+    var trabajos = ES ? [
+      { clave: 'willoughby', lugar: 'Willoughby', etiqueta: 'Siguiente · en 25 min', hora: '11:30 · Willoughby', que: 'Cambio de llave', quien: 'Tom R. · 14 Laurel Street', ruta: 'Cómo llegar · 12 min', nota: '“Cambié la llave mezcladora. La anterior estaba corroída.”', cliente: 'Tom', informe: 'la factura y una solicitud de reseña' },
+      { clave: 'mosman', lugar: 'Mosman', etiqueta: 'Siguiente · 16:00', hora: '16:00 · Mosman', que: 'Revisión de gas', quien: 'Lena K. · 8 Raglan Street', ruta: 'Cómo llegar · 18 min', nota: '“Revisión de gas aprobada. Le dejé el certificado a Lena.”', cliente: 'Lena', informe: 'el informe de seguridad de gas y la factura' }
+    ] : [
       { clave: 'willoughby', lugar: 'Willoughby', etiqueta: 'Next · in 25 min', hora: '11:30 · Willoughby', que: 'Tap replacement', quien: 'Tom R. · 14 Laurel Street', ruta: 'Directions · 12 min', nota: '“Replaced the mixer tap. The old one was corroded.”', cliente: 'Tom', informe: 'the invoice and a review request' },
       { clave: 'mosman', lugar: 'Mosman', etiqueta: 'Next · 16:00', hora: '16:00 · Mosman', que: 'Gas check', quien: 'Lena K. · 8 Raglan Street', ruta: 'Directions · 18 min', nota: '“Gas check passed. Certificate left with Lena.”', cliente: 'Lena', informe: 'the gas safety report and the invoice' }
     ];
@@ -764,10 +776,10 @@
     var pinta = function () {
       var t = trabajos[actual];
       if (!t) {
-        pon('[data-apps-etiqueta]', 'All done');
-        pon('[data-apps-hora]', 'Your jobs are finished');
-        pon('[data-apps-que]', 'Nice work, Dan.');
-        pon('[data-apps-quien]', 'Reports and invoices have gone out.');
+        pon('[data-apps-etiqueta]', tr('All done', 'Todo listo'));
+        pon('[data-apps-hora]', tr('Your jobs are finished', 'Terminaste tus trabajos'));
+        pon('[data-apps-que]', tr('Nice work, Dan.', 'Buen trabajo, Dan.'));
+        pon('[data-apps-quien]', tr('Reports and invoices have gone out.', 'Los informes y las facturas ya salieron.'));
         var dir = q('[data-apps-direcciones]'); if (dir) dir.hidden = true;
         var bs = q('[data-apps-botones]'); if (bs) bs.hidden = true;
         if (notaTexto) notaTexto.hidden = true;
@@ -776,18 +788,18 @@
       pon('[data-apps-etiqueta]', t.etiqueta); pon('[data-apps-hora]', t.hora); pon('[data-apps-que]', t.que);
       pon('[data-apps-quien]', t.quien); pon('[data-apps-direcciones]', t.ruta);
       if (notaTexto) { notaTexto.hidden = true; notaTexto.textContent = t.nota; }
-      if (botonNota) { botonNota.disabled = false; botonNota.textContent = 'Voice note'; }
+      if (botonNota) { botonNota.disabled = false; botonNota.textContent = tr('Voice note', 'Nota de voz'); }
     };
     if (botonNota) botonNota.addEventListener('click', function () {
       var t = trabajos[actual];
       if (!t) return;
       botonNota.disabled = true;
-      botonNota.textContent = 'Recording…';
+      botonNota.textContent = tr('Recording…', 'Grabando…');
       setTimeout(function () {
         if (trabajos[actual] !== t) return;
-        botonNota.textContent = 'Note added';
+        botonNota.textContent = tr('Note added', 'Nota agregada');
         if (notaTexto) notaTexto.hidden = false;
-        anota('Wrote up Dan’s voice note for the ' + t.lugar + ' job.');
+        anota(ES ? 'Transcribió la nota de voz de Dan del trabajo en ' + t.lugar + '.' : 'Wrote up Dan’s voice note for the ' + t.lugar + ' job.');
       }, quieto ? 0 : 1200);
     });
     if (botonHecho) botonHecho.addEventListener('click', function () {
@@ -796,24 +808,24 @@
       var fila = q('[data-apps-trabajo="' + t.clave + '"]');
       if (fila) {
         fila.classList.remove('siguiente'); fila.classList.add('hecho');
-        var e = fila.querySelector('[data-apps-estado]'); if (e) e.textContent = 'Done';
+        var e = fila.querySelector('[data-apps-estado]'); if (e) e.textContent = tr('Done', 'Listo');
       }
       hechos++; deDan++;
       pon('[data-apps-hechos]', hechos);
-      pon('[data-apps-progreso-texto]', deDan + ' of 4 done');
+      pon('[data-apps-progreso-texto]', deDan + tr(' of 4 done', ' de 4 listos'));
       var barra = q('[data-apps-progreso]');
       if (barra) barra.style.setProperty('--hecho', (deDan / 4).toFixed(2));
-      anota('Sent ' + t.cliente + ' ' + t.informe + '.');
+      anota(ES ? 'Le envió a ' + t.cliente + ' ' + t.informe + '.' : 'Sent ' + t.cliente + ' ' + t.informe + '.');
       actual++;
       var sig = trabajos[actual];
       if (sig) {
         var f2 = q('[data-apps-trabajo="' + sig.clave + '"]');
-        if (f2) { f2.classList.add('siguiente'); var e2 = f2.querySelector('[data-apps-estado]'); if (e2) e2.textContent = 'Next'; }
-        pon('[data-apps-dan]', 'Heading to ' + sig.lugar);
+        if (f2) { f2.classList.add('siguiente'); var e2 = f2.querySelector('[data-apps-estado]'); if (e2) e2.textContent = tr('Next', 'Siguiente'); }
+        pon('[data-apps-dan]', tr('Heading to ', 'Va camino a ') + sig.lugar);
         var luego = q('[data-apps-luego]');
-        if (luego) { luego.innerHTML = ''; var vacio = document.createElement('li'); vacio.className = 'movil-vacio'; vacio.textContent = 'Nothing else today'; luego.appendChild(vacio); }
+        if (luego) { luego.innerHTML = ''; var vacio = document.createElement('li'); vacio.className = 'movil-vacio'; vacio.textContent = tr('Nothing else today', 'Nada más por hoy'); luego.appendChild(vacio); }
       } else {
-        pon('[data-apps-dan]', 'Done for the day');
+        pon('[data-apps-dan]', tr('Done for the day', 'Terminó por hoy'));
       }
       pinta();
     });
