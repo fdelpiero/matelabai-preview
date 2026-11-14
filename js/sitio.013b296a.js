@@ -252,28 +252,15 @@
     var nota = caja.querySelector('[data-tablero-nota]');
     var titulo = caja.querySelector('[data-tablero-titulo]'), texto = caja.querySelector('[data-tablero-texto]');
     var placa = caja.querySelector('.placa');
-    var actual = -1, reloj = null, tocado = false, px = null, py = null, pedido = false;
+    var actual = -1, reloj = null, tocado = false;
     if (!chips.length) return;
-    /* the plate turns toward the mouse (about 10 degrees across the screen, a little tilt up and down);
-       without a mouse (phones), each service turns it a step instead */
-    var gira = function () {
-      pedido = false;
-      if (!placa) return;
-      var giro = px === null ? 5 - actual * 10 / Math.max(1, chips.length - 1) : 4 + (px - 0.5) * 10;
-      var incl = py === null ? 56 : 56 + (py - 0.5) * 6;
-      placa.style.setProperty('--giro', giro.toFixed(2) + 'deg');
-      placa.style.setProperty('--incl', incl.toFixed(2) + 'deg');
+    /* the plate turns only when someone clicks a service: each one further along turns it 2.5 degrees more to the left.
+       It never turns on its own (the auto-play only lights the paths). */
+    var gira = function (i) {
+      if (placa) placa.style.setProperty('--giro', (-2.5 * i).toFixed(1) + 'deg');
     };
-    if (!quieto && placa) {
-      window.addEventListener('pointermove', function (e) {
-        if (e.pointerType !== 'mouse') return;
-        px = e.clientX / window.innerWidth; py = e.clientY / window.innerHeight;
-        if (!pedido) { pedido = true; requestAnimationFrame(gira); }
-      }, { passive: true });
-    }
     var enciende = function (i) {
       actual = i;
-      gira();
       var ruta = chips[i].getAttribute('data-ruta').split(' ');
       chips.forEach(function (c, k) { c.setAttribute('aria-pressed', String(k === i)); });
       teclas.forEach(function (t) { t.classList.toggle('encendida', ruta.indexOf(t.getAttribute('data-tecla')) >= 0); });
@@ -288,6 +275,7 @@
         tocado = true; para();
         if (nota) nota.setAttribute('aria-live', 'polite');
         enciende(i);
+        gira(i);
       });
     });
     enciende(0);
