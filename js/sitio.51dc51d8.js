@@ -885,7 +885,7 @@
     return lineas.join('\n');
   }
 
-  $$('form[data-formulario]').forEach(function (form) {
+  $$('form[data-formulario]:not([data-contacto]):not([data-registro])').forEach(function (form) {
     var estado = form.querySelector('.estado-formulario');
     var enviar = form.querySelector('[type="submit"]');
     form.setAttribute('novalidate', '');
